@@ -1,196 +1,384 @@
-library(data.table)
-library(openxlsx)
-hu <- read.xlsx("H:/Rѧϰ/��ϰ/��ϰ.xlsx",colNames=TRUE)
-hu1 <- setDT(hu)   #????data.table
-HU1 <- copy(hu1)   #??Ϊdata.table?Դ???ַ?ķ?ʽֱ???޸?ԭ??????û?п???
-a <- data.frame(summary(hu1))
-nrow(hu1)
-ncol(hu1) 
-names(hu1)
-head(hu1[,!2:3])   #??ȡ2,3?е?ǰ6??(????��????)
-hu2 <- hu1[3:10]   #ѡ?У???��??
-hu4 <- hu1[!1:4]   #ѡȡ??????
-hu5 <- hu1[GY_H > 10 & IR_H > 350 & GY_E >5]   #??ͬ??�� 
-hu10 <- hu1[Cultivar %in% c("Y-Lliangyou 900","Shanyou63")]   #ͬһ??��??ͬ???飨?????????????㣩
-hu6 <- hu1[,names(hu1) %like% "IR"]   #ģ??ѡ??
-hu7 <- hu[,.(Cultivar)]   # .???? ????һ??data.table?????���?ǣ?
-setnames(hu1,"IR_H","IR_2")   #??????��??????
-setnames(hu1,c("GY_H","IR_2"),c("GY_1","IR_H"))   #??????��??????
-setcolorder(hu1,c(1L,4L,2L,3L,5L))   #?޸??е?˳??
-setcolorder(c(4L,1L:3L))
-hu9 <- setorder(hu1,Cultivar,-IR_H)   #????��??????
-#with Ĭ????TRUE???????ܹ???????��ʹ??,??x?൱??DT$"x"
-#key
-mydata[origin %in% c("JFK", "LGA")]
-mydata[c("JFK", "LGA")]
-#?Զ?????��????????
-setkey(mydata, origin, dest)
-mydata[.("JFK", "MIA")]
-#???????????????ݲ???Ч??
-setkey(hu1,Cultivar)   #?ɶ???????
-hu11 <- hu1[!c("Y-Lliangyou 900","Shanyou63")]   #ͬһ??????��
-setkey(hu1,Cultivar,GY_H)
-hu12 <- hu1[!.("Y-Lliangyou 900",4.42)]   #??ͬ??��
+# 
+# 学术前沿研讨
 
-# ʹ??:= ???ӻ?????һ?У???��?ż?˫???ţ?
-hu12 <- hu1[,IR_I := IR_I*2]   #????һ??
-hu14 <- hu1[,c("IR_I","GY_1"):=list(IR_I*2,GY_1*2)]   #???¶???
-hu13 <- hu1[,IR_2 := IR_I*2]   #????һ??
-hu15 <- hu1[,c("IR_a","GY_a"):=list(IR_I*2,GY_1*2)]   #???Ӷ???
-hu16 <- hu1[,Cultivar:= NULL]  #?Ƴ???
-hu17 <- hu1[,c("IR_I","GY_1"):=  NULL] 
+# 1 数据类型 --------------------------------------------------------------------
+## 1.1 数值型
+a <-  1
+a # print
+str(a)
+class(a)
 
-#%$%????ʾ???Ҵ????У???????ֱ?Ӱ??в???
-data = data%>% 
-  as.data.table()%$% 
-  .[,.(value = sum(value,na.rm = TRUE)),
-    by = c("period","index","area","id1","id2")]
+a <- 1L
+a # print
+str(a)
+class(a)
 
-#?ı????????б?��????
-data = data%$%
-  .[index_name == "DB",index_name := "DB_PV"]%$%
-  .[index_name == "GZ",index_name := "GZ_UV"]%$%
-  .[index_name == "XSLZ",index_name := "XSLZ_UV"]
+## 1.2 字符型
+b <- "王春虎"
+b <- "1"
+b
+str(b)
+class(b)
 
-#ɸѡ????
-N <- rank.P[ID2%in%target,.(ID2, Month, prov_ID, Province, Index_name,Value_adj_per)]
+## 1.3 bool型 TRUE FALSE
+c <- F # T
+c
+str(c)
+class(c)
 
-#ɸѡĳ????ÿ????????ǰ20??
-P <- rank.P[ID2%in%target,
-            .SD[1:20],
-            by = c("ID2","Month","prov_ID","Province","Index_name")]
+## 1.4 向量
+### 1.4.1 c 创建
+b <- c("王", "春", "虎", 1, T)
+b
+str(b)
+class(b)
 
-#????
-hu1[,.(mean(IR_H)),by=.(Cultivar,IR_E)]
-hu1[,.N,by=.(Cultivar,IR_E)]   #?鿴????????
-.hu1[,{print(IR_H)
-  plot(GY_H)
-  NULL}]   #????????ʽ???԰????ڻ?��????
+b[1]
+
+### 1.4.2 : (数值型)
+a <- 1:10 # seq(1, 10) / c(1, 2, ..., 10)
+a # 向量
+str(a)
+
+#### 取值
+a[] # 单个/连续/离散
+
+### 1.4.3 其他函数
+c <- rep(x = 1:3, 3)
+c
+str(c)
+
+d <- paste0("王", rep(x = 1:3, 3))
+d
+class(d)
+
+## 1.5 数据框 data.frame创建
+e <- openxlsx::read.xlsx(xlsxFile = "D:/长大/学术前沿研讨作业/学术前沿研讨.xlsx")
+str(e)
+class(e)
+
+## 1.6 列表 list创建
+f <- list(a, b)
+str(f)
+class(f)
+
+# 2 包的使用 (F1)-------------------------------------------------------------------
+## 2.1 下载
+### 2.1.1 命令
 
 
-#???ݾۺ?
-hu1[,.(mean=mean(GY_H,na.rm = TRUE),
-       median=median(GY_H,na.rm =TRUE),
-       min=min(GY_H,na.rm = TRUE),
-       max=max(GY_H,na.rm = TRUE)
-       )]   #??????��
-hu1[,.(mean(GY_H,na.rm =TRUE),mean(GY_E))]   #??????��
-hu1[,sapply(.SD,meadata <- data.table(x <- c(rep("a",3),rep("b",4),rep("c",5)),
-                   y <- 1:12,
-                   z <- 13:24)
-data.table(data[,lapply(.SD,mean),.SDcols = c("V2","V3"),by = "V1"])
-data.table(data[,lapply(.SD,function(x) c(mean(x),sd(x),min(x))),.SDcols = c("V2","V3"),by = "V1"])?ڵ?????
-
-#.SD????  ( .SD??һ??data.table?????????˸??????飬????by?еı?��??????Ԫ?ء?.SDֻ????λ??j??ʹ?ã?
-hu1[,print(.SD),by=Cultivar]  #?Է???????ʽ???????б?��
-hu1[,.SD[c(1,.N)],by=Cultivar]   #?Է???????ʽ???????б?��?ĵ?һ?к?????һ??
-
-#ֱ???޸?ĳ??λ?õ?ֵ
-#set(DT,rownum,colnum,value)
-HU1 <- copy(hu1)
- for (i in 1:nrow(hu1))set(hu1,i,1L,"a")
-HU1
-set(HU1,2L,1L,"b")
-
-#by??on??with?Ȳ???
-#by???????ݽ??з???
-#on????��ƥ??
-a <- hu1[HU1,on=c("Cultivar","GY_E")]   #ȡhu1??"x","y"??????HU1??"x","y????????��???У?????D????merge
-hu20 <- hu1[HU1,on="Cultivar"]
-hu21 <- HU1[hu1,on="Cultivar"]
-hu22 <- hu1[HU1,on="Cultivar",nomatch=0]  #nomatch=NA??ʾ??NA???ز?ƥ????ֵ
-#withĬ????TRUE???????ܹ???????��ʹ??
-a <- letters[11:20]
-b <- letters[1:10]
-c <- LETTERS[1:10]
-A <- data.table(a,b)
-B <- data.table(b,c)
-setnames(B,c("b","c"),c("a","b"))
-A[B,on=c("a","b")]
-A[B,on="a"]
-B[A,on="b"]
-A["b",on="a",mult="last"]   #????i ??ƥ?䵽???ж???ʱ??mult???Ʒ??ص???
-
-#reshape
-setcolorder(hu1,c(1L,4L,2L,3L,5L))   #?޸??е?˳??
-#setnames(hu1,c("Cultivar","IR_E"),c("id","x"))
-dcast(HU1,Cultivar~IR_E,
-              value.var = c("IR_H","GY_H","GY_E"))
-melt(hu1,
-        id.vars = c("Cultivar"),
-        measure = patterns("^IR_H","^GY_H"),
-        variable.name = "IR_E",
-        value.name=c("IR_H","GY_H","GY_E"))
-
-a <-rep(LETTERS[1:2],each=3)
-b <-rep(c(1,2),times=3)
-c <-c(4,6,5,9,8,5)
-d <-rep(letters[6:11])
-e <-data.frame(a,b,c,d)
-f <-setDT(e)
-g <-copy(f)
-dcast(g,
-      a~b,
-      value.var = c("c","d"))
-
-library(tidyr)   
-label <- unite(hu9,"msg",mean_IRH,sg,sep = "")   #?ϲ?��??Ϊһ?У?ƽ??ֵ+?????ԣ?
-
-#?????Լ???
-#pearson(Ƥ??ѷ????ϵ??)
-a <- c(1,2,4,4,5,6,6,8,8,10)
-b <- c(2,1,4,8,8,12,14,18,14,20)
-cor.test(a,b,method = "pearson")   #pֵ?ǽ??۲???????Ϊ??Ч???????????????Եķ??????ʡ???p=0.05??ʾ?????б?��??��??5%?Ŀ?????????żȻ?????ɵġ?method="spearman"/"kendall"   [??t??pֵ]
-cor(a,b,method = "pearson")   #[ֻ??????ϵ??]
-
-#????????
-#?????ط????????????رȽ?
-require(agricolae)
+### 2.1.2 Rstudio界面
+## 2.2 加载 (加载进来才能使用)
+### 2.2.1 常规 require / library
 require(data.table)
-require(magrittr)
+require(stringr) # 在一个函数中，如果一个包不存在，执行到require将会继续执行
+library(magrittr) # 在一个函数中，如果一个包不存在，执行到library将会停止执行
 
-wang <- c("??","??","??","??","??","??")
-chun <- c(1:6)
-hu <- data.table(wang,chun)
-hu.aov <- aov(chun~wang,hu) ##??????$ѡ??��?????????ţ?ֱ??д??��
-hu.lsd <- LSD.test(hu.aov,"wang",p.adj = "none",alpha = 0.05)
-hu.lsd$groups  #????????
-LETTER <- R1[,2]
+### 2.2.2 apply族
+bao <- c("data.table", "stringr", "magrittr")
+sapply(X = bao, FUN = require, character.on = T)
 
-#???ڴ???(???ⲿ????��Ϊ?ַ???????r????дΪ"yyyy-mm-dd")
-Sys.Date()   #???ص?ǰ????
-Sys.time()
-date()   #???ص?ǰ???ں?ʱ??
-scale_x_date(date_labels ="%d-%b")
-as.Date("2007??2??1??", "%Y??%m??%d??") 
+### 2.2.3 只加载所需函数, 降低内存使用
+openxlsx::read.xlsx(xlsxFile = "D:/长大/学术前沿研讨作业/学术前沿研讨.xlsx")
+a <- openxlsx::read.xlsx(xlsxFile = "D:/长大/学术前沿研讨作业/学术前沿研讨.xlsx") # = 也可以
+openxlsx::read.xlsx(xlsxFile = "D:/长大/学术前沿研讨作业/学术前沿研讨.xlsx") -> b # = 不可以
 
-hu <- read.xlsx("H:/Rѧϰ/��ϰ/????��ϰ.xlsx",colNames = T,detectDates = T)
 
-today <- Sys.Date()
-format(x = hu$??,"%Y??%m??%d??")
-format(x = hu$??,"%a")
-as.character(today, format="%Y??%m??%d??")   #?ַ???ת??Ϊ?ַ???
-time <- Sys.time()
-format(time, "%Y??%m??%d??%Hʱ%M??%S??")
-as.character(time, format="%Y??%m??%d??%Hʱ%M??%S??")
-dob <- as.Date("1996/10/12")
+# 3 data.table DT[i, j, by]--------------------------------------------------------------
+## 引用地址1: https://www.heywhale.com/mw/project/59f92e8ec5f3f511952ea49a
+## 引用地址2: https://zhuanlan.zhihu.com/p/26388833
+## 引用地址3: https://zhuanlan.zhihu.com/p/26656483
+## 引用地址4: https://zhuanlan.zhihu.com/p/26748434?from_voters_page=true
 
-difftime(today,dob,units ="auto" )   #????ʱ??????
+## 加载包
+require(data.table)
 
-#????????ʽ.  (????һ??λ?õ??ַ?????)
-"^" # ƥ??һ???ַ????Ŀ?ʼ
-  sub("^a","",c("abcd","dcba"))
-"$ "# ƥ??һ???ַ????Ľ???  
-  sub("a$","",c("abcd","dcba"))
-"." #??ʾ???˻??з?????????һ?ַ?
-  sub("a.c","",c("abcd","sdacd"))
-"*" #ʾ????ǰ???ַ?????0??????????ƥ??
-  sub("a*b","",c("aabcd","dcaaaba"))
+## 3.1 创建
+setDT() # 从其他类型转换
+as.data.table() / data.table() # 从其他类型转换
+fread() # 从本地读取
 
-#?̱䳤
-  melt.data.table(data = shanghai,id.vars=c("year"),variable.name="chidu")
 
-#??NA???ɿ?ֵ 
-tidyr::replace_na() 
+set.seed(45L) # 设置随机数种子
+## 3.2 使用
+DT <- data.table(V1 = c(1L,2L), # 格式
+                 V2 = LETTERS[1:3],
+                 V3 = round(rnorm(4),4), # rnorm: 给定平均值和标准偏差生成随机数
+                 V4 = 1:12)
+DT
+str(DT)
+class(DT)
+
+# DT[i, j, by]
+### 3.2.1 取行
+DT[1]
+DT[2:3]
+DT[V4 >= 5 & V4 <= 10]
+# DT[V4 %between% c(5, 10)]
+DT[V2 %in% "A"]
+DT[V1 %chin% 1] # data.table
+DT[V3 %like% "3"]
+
+### 3.2.2 取列
+DT[, 1]
+DT[, V1] # 返回向量, 通常用$
+DT[, .(V1)] # 返回数据框 list()
+DT[, 2:3]
+DT[, .(V2, V3)] # list
+DT[, V1:V4]
+DT[, c("V2", "V3")] # data.frame写法
+#### with使用变量取列或使用data.frame写法或.SD
+k <- "V1"
+DT[, k] # 报错
+data.frame(DT) %>% .[k]
+DT[, k, with = F] 
+
+### 3.2.3 同时取行列
+DT[2:3, 2:3]
+DT[V2 %in% c("A", "B"), .(V3, V4)] # 智能识别
+DT[c("A", "B"), .(V3, V4), on = "V2"] # 使用on参数提取某一列是某一个值的行
+# ### on的另一个用法merge, 可以反选 ,nomatch = 0(不显示未匹配的)
+# dt2[dt1, on = "name1"] # 这里保留dt1的，dt2中没有的填上NA
+# dt2[dt1, on = "name1", nomatch = 0] # 取交叉部分
+# dt1[!dt2, on = "name1"] # 取dt2没有的部分
+# dt1[dt2, on = .(name1 == friend)] # 当要融合的内容列名不相同时，用==匹配在一起
+# dt1[dt2, on = "name1 == friend"] # 与上等价
+# ##### 如果融合依据是数字，还可以用<= >=等连接，将满足这个不等式的匹配在一起
+# dt1[dt2, .(name1, w = weight), on = "name1 == friend"] #在第二个参数的位置选择返回哪些列,同时修改列名
+# dt1[dt2, on = "name1", mult = "first"] # 选择每组的第一个（按照on分组，这里没有体现出来）
+# dt1[dt2, on = "name1", mult = "last"] # 选择每组的最后一个
+# # 加by=.EACHI和计算的参数还可以同时分组计算
+
+### 3.2.4 计算
+DT[, sum(V3)]
+DT[, .(sum(V3)), by = .(V2)] # by
+DT[, .(V3.mean = mean(V3), V3.sd = sd(V3)), by = V2]
+DT[! V2 %in% "C", .(V3.mean = mean(V3), V3.sd = sd(V3)), by = .(V1, V2)]
+
+### 3.2.5 .N
+DT[, .N] # nrow
+DT[, .N, by = V2]
+
+DT[.N] # 返回最后一行
+DT[.N - 1, .(V3)] # 返回倒数第二行
+
+### 3.2.6 .I 表示（分组后）每一行在原数据框中是第几行, 可以根据分组选取第几行数据
+DT[, .(mean.V3 = mean(V3), I = .I[2]), by = V2]
+
+### 3.2.7 .GRP 如果不使用by参数，则为1。使用by，则是组的计数（第一组的值是1，第二组是2）
+DT[, grp := .GRP, by = V2][]
+
+### 3.2.8 添加或更新列 := (+-*/等等)
+DT[, V5 := round(exp(V1), 2)][] # 显示结果 []
+DT[, c("V1","V2") := list(round(exp(V1),2), LETTERS[1:12])][]
+
+### 3.2.9 移除列, 直接修改DT
+DT[, V5 := NULL][] %>% head() # 控制屏幕输出长度
+DT[, c("V1","V2") := NULL][] # 不能传递变量
+#### 移除, 不修改DT, 需赋值给其它变量或自己
+DT[, !5]
+DT <- DT[, !5]
+DT[, !"V3"]
+DT[, !c("V4", "V5")]
+
+### 3.2.10 setkey / setindex(单种选择) 设置键值, 会自动按键值进行排序 
+set.seed(45L) # 设置随机数种子
+DT <- data.table(V1 = c(1L,2L),
+                 V2 = LETTERS[1:3],
+                 V3 = round(rnorm(4),4), # rnorm: 给定平均值和标准偏差生成随机数
+                 V4 = 1:12)
+#### 单个主键
+setkey(DT, V2)
+# haskey(DT)
+key(DT) # 查看键值
+
+DT["A"] # 筛选
+DT[.("A")] # 推荐
+DT[.(c("A", "B"))]
+##### 以下几个参数需要设置key
+DT[.(c("A", "B")), mult = "first"] # mult参数是用来控制i匹配到的哪一行的返回结果默认情况下会返回该分组的所有元素,last/all
+DT[.(c("A", "D"))]
+DT[.(c("A", "D")), nomatch = 0] # nomatch参数用于控制，当在i中没有到匹配数据的返回结果，默认为NA，也能设定为0。0意味着对于没有匹配到的行将不会返回。
+DT[.(c("A", "C")), sum(V4)]
+DT[.(c("A", "C")), sum(V4), by = .EACHI] # 按每一个已知i的子集分组
+
+#### 多个主键
+setkey(DT, V1, V2)
+key(DT)
+DT[.(2,c("A", "C"))]
+DT[.(2,c("A", "C")), mult = "first"]
+
+### 3.2.11 .SD 含了各个分组，除了by中的变量的所有元素。.SD只能在位置j中使用
+DT[, print(.SD)] # DT[, .SD] , 只打印,无返回值
+a <- DT[, .SD, by = V2] # 相当于按V2排序
+DT[, .SD[c(1, .N)], by = V2] # 以V2为分组，选择每组的第一和最后一行
+#### lapply + .SD, 同时计算多列/多功能
+str(DT) # 运算时查看列是否为数值
+##### 不是数值的话转为数值
+DT$V1 <- as.character(DT$V1)
+DT[, lapply(.SD, sum), by = V2] # 不支持字符类型
+DT$V1 <- as.numeric(DT$V1)
+DT[, lapply(.SD, sum), by = V2]
+##### 多列同时转
+DT[, lapply(.SD, as.numeric), .SDcols = c("V1", "V3", "V4"), by = V2] # V2一定要加,否则会删除
+##### 多功能
+DT[, lapply(.SD,function(x) c(mean(x), sd(x), min(x), max(x))), by = .(V1, V2)] # 自定义函数
+DT[, .(mean.V3 = mean(V3), sd.V3 = sd(V3), min.V3 = min(V3), max.V3 = max(V3), mean.V4 = mean(V4), sd.V4 = sd(V4), min.V4 = min(V4), max.V4 = max(V4)), by = .(V1, V2)]
+
+#### 选择列进行运算
+DT[, lapply(.SD, sum), .SDcols = c("V3", "V4"), by = V2]
+
+### 3.2.12 串联操作
+dt <- DT[, .(V4.Sum = sum(V4)), by = V1]
+dt
+dt1 <- dt[V4.Sum > 36]
+dt1
+
+dt1 <- DT[, .(V4.Sum = sum(V4)), by = V1][V4.Sum > 36 ] # $选择
+dt1
+
+dt1 <- DT[, .(V4.Sum = sum(V4)), by = V1] %>% .[V4.Sum > 36 ] # 更倾向于这种
+dt1
+
+### 3.2.13 set家族, 直接修改原数据
+DT
+#### 3.2.13.1 set
+set(x = DT, i = 1L, j = 2L, value = "B")[]
+
+##### 交互式编辑
+# fix修改之后，改变的是原数据框
+# edit修改后原数据框未变，需要将修改后的结果赋值给一个新的变量
+fix(DT)
+DT
+
+d <- data.table()
+d
+fix(d)
+d
+
+#### 3.2.13.2 setname 修改列名
+setnames(DT, "V1", "v1")[]
+setnames(DT, c("V2", "V3", "V4"), c("v2", "v3", "v4"))[]
+
+#### 3.2.13.3 setcolorder, 修改列的顺序
+setcolorder(DT, c("v2", "v1", "v4", "v3"))[]
+
+#### 3.2.13.4 setorder, 排序
+DT
+setorder(DT, v2)[]
+setorder(DT, -v2)[]
+setorder(DT, v2, -v1)[]
+
+#### 3.2.13.5 setDT和setDF
+# 不占内存, 修改变量本身
+DT <- as.data.table(DF) # 经过了两次复制, 先把DF转为data.table格式, 再赋值给DT
+
+### 3.2.14 copy 深度拷贝一个data.table
+DT
+DT.assgn <- DT
+DT.copy <- copy(DT) 
+DT; DT.assgn; DT.copy
+DT[, V5 := 12:1]
+DT; DT.assgn; DT.copy
+
+### 3.2.15 tstrsplit
+name <- 1:3
+dates <- c("2016-3-4", "2016-3-14", "2016-3-24")
+nd <- data.table(name, dates)
+strsplit(dates, "-") # 和stringr中的分裂函数一致
+tstrsplit(dates, "-") # 好像把strsplit得到的结果转置了一样
+nd[, c("year", "month", "day") := tstrsplit(dates, "-")][] # 实现拆分
+
+# 3.2.16 集合操作函数
+# 增加了all参数，控制重复值。基础函数只能返回去重之后的结果
+# 函数变化：union intersect setdiff setequal 前面都加了一个f
+# 基础函数作用于两个向量，data.table中函数作用于两个data.table数据框，而且列名需要相同
+x <- data.table(a=c(1,2,2,2,3,4,4))
+y <- data.table(a=c(2,3,4,4,4,5))
+x
+y
+fintersect(x, y)            # 返回相交部分并去重
+fintersect(x, y, all=TRUE)  # 相交，保留重复值
+fsetdiff(x, y)              # x中有y中没有的，去重
+fsetdiff(x, y, all=TRUE)    # 保留重复值
+funion(x, y)                # 并集，去重
+funion(x, y, all=TRUE)      # 保留重复值
+fsetequal(x, y)             # 返回一个F，二者不完全相等
+
+# rank 返回排名
+# frank比rank函数速度更快，而且增加参数ties.method参数的一种取值”dense”，即当有两个值相等并列第二时，让二者都为2，之后的数排名不是第4，而是3，这样结果数值不会发生跳跃
+
+x = c(2, 1, 4, 5, 3, NA, 4)
+frank(x) # 自动将NA当成最大的了
+frank(x, na.last=F) # 自动将NA当成最小的
+frank(x, na.last="keep") # NA仍然是NA
+frank(x, ties.method = "min")
+frank(x, ties.method = "dense")
+
+DT = data.table(x, y=c(1, 1, 1, 0, NA, 0, 2))
+frank(DT, cols="x")
+
+# 滞后
+# shift函数,参数如下
+# n控制变换阶数
+# fill控制填充内容
+# type取"lag"或者"lead"，看去除后面的值向后靠（前面添NA），还是去除前面的值向前靠（后面添NA）
+y <- x <- 1:5
+xy <- data.table(x,y)
+shift(x, n=1, fill=NA, type="lag")
+shift(x, n=1:2, fill=0, type="lag")
+xy[,(c("a","b")):=shift(.SD,1,0,"lead")][] # 添加两列
+xy[,shift(.SD,1,0,"lead",give.names = T)][] # 自动生成名字
+shift(xy, n=1, fill=0, type="lag", give.names=T) # 生成list
+
+# 上下合并数据框
+# 使用rbindlist函数，先将数据框转化为list再进行合并
+DT1 = data.table(A=1:3,B=letters[1:3])
+DT2 = data.table(A=4:5,B=letters[4:5])
+DT3 = data.table(B=letters[4:5],A=4:5)
+DT4 = data.table(B=letters[4:5],C=factor(1:2))
+l1 = list(DT1,DT2)
+l2 = list(DT1,DT3)
+l3 = list(DT1,DT4)
+rbindlist(l1)
+rbindlist(l1,idcol=T) # 多出一列，对数据框分组（来自不同数据框）
+names(l1) <- c("DT1", "DT2")
+# setattr(l1, 'names', c("DT1", "DT2"))
+rbindlist(l1,idcol="DT")
+rbindlist(l2) # 不同列名直接合并
+rbindlist(l2,use.names=T) # 将相同列名的合并在一起
+rbindlist(l3) # 不同列名直接合并
+rbindlist(l3,fill=T) # 选择相同列名合并，不匹配的填入NA
+
+# options设置
+d <- data.table(a=1:200, b=2:201)
+d # 200行数据自动只输出前5行和后5行
+op <- options(datatable.print.topn=10) # 设置打出前10行和后10行
+d # 打出前10行和后10行
+options(op) # 恢复默认值5
+
+f <- data.table(a=1:50, b=2:51)
+f # 50行全打了出来
+op <- options(datatable.print.nrows = 30) # 设置行数超过30行时就省略打出
+f # 只打出前5行和后5行
+options(op) # 恢复默认值100
+
+# alt + up/down 将光标所在行向上/下移动
+# shift + alt + up/down 将光标所在行复制粘贴在上面/下面一行
+# alt + left/right 光标瞬间移动到行首/行尾
+# alt + shift + left/right 选择本行光标左/右侧的所有内容
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
