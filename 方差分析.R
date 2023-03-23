@@ -1,54 +1,14 @@
-libs <- c("data.table", "stringr", "magrittr")
-sapply(libs, require, character.on = T)
+read.csv(file.choose())
+#µ¥ÒòËØ
+#¶ÁÈ¡Êı¾İ
+hu <- read.table("H:\\RÑ§Ï°\\Á·Ï°.txt",header=T) 
 
-# Set workdir
-workdir <- "D:/å­¦ä¹ /key/ç‰²ç•œ/20221227"
-setwd(workdir)
-dir()
+#½«huÊı¾İ¿òÖĞµÄtype×ª»»ÎªÒò×Ó
+hu$type <- as.factor(hu$type)
 
-# è¯»å…¥æ•°æ®
-data <- openxlsx::read.xlsx("Figure 1 - Copy.xlsx") %>% setDT() %>% melt.data.table(id.vars = c("P.source", "Temp(Â°)", "P.rate.(kg.ha-1)", "Time.(d)"), variable.name = "rep", value.name = "value") %>% na.omit() %>% .[, factor := paste(P.source, `Time.(d)`, `P.rate.(kg.ha-1)`, sep = "-")]; head(data)
+#·½²î
+hu.an<- aov(lm(day~type,data = hu))
 
-uniq <- unique(data$factor)
-
-# æ–¹å·®åˆ†æ-->å•å› ç´ 
-i <- 1
-all <- NULL
-for (i in 1:length(uniq)) {
-  single <- data[factor %in% uniq[i]]
-  aov <- aov(formula = value ~ `Temp(Â°)`, data = single)
-  ### å¤šé‡æ£€éªŒ, LSD:æœ€å°æ˜¾è‘—å·®æ•°æ£€éªŒæ³•
-  lsd.aov <- agricolae::LSD.test(y = aov, trt = "Temp(Â°)", p.adj = "holm", alpha = 0.05) 
-  mean_sd <- setDT(lsd.aov$means[, 1:2]) %>% .[, group := row.names(lsd.aov$means)]
-  LETTER <- setDT(lsd.aov[[5]])
-  mean_sd_LETTER <- mean_sd[LETTER, on = .(value)] 
-  single.last <- mean_sd_LETTER[, factor := unique(single$factor)]
-  all <- rbind(all, single.last)
-  print(paste(i, length(uniq), sep = " / "))
-}
-
-# æ•°æ®é¢„å¤„ç†
-all[, c("P.source", "Time.(d)", "P.rate.(kg.ha-1)") := list(str_split_fixed(factor, "-", 3)[, 1], str_split_fixed(factor, "-", 3)[, 2], str_split_fixed(factor, "-", 3)[, 3])] %>% setnames("group", "Temp(Â°)")
-head(all)
-all$`P.rate.(kg.ha-1)` <- paste0("P", all$`P.rate.(kg.ha-1)`)
-all$`P.rate.(kg.ha-1)` <- factor(all$`P.rate.(kg.ha-1)`, levels = c("P0", "P50", "P100", "P200", "P400"))
-all$`Time.(d)` <- as.numeric(all$`Time.(d)`)
-
-# ç”»å›¾
-require(ggplot2)
-pdf("Figure 1.pdf", width = 15, height = 15, family = "serif")
-ggplot(data = all, mapping = aes(x = `Time.(d)`, y = value))+
-  facet_grid(`P.rate.(kg.ha-1)` ~ P.source, scales = "free")+
-  geom_point(mapping = aes(color = `Temp(Â°)`), size = 3)+
-  geom_line(mapping = aes(color = `Temp(Â°)`), linewidth = 1)+
-  ggrepel::geom_text_repel(mapping = aes(x = `Time.(d)`, y = value, label = groups, color = `Temp(Â°)`), size = 8, show.legend = F)+
-  geom_errorbar(mapping = aes(x = `Time.(d)`, y = value, ymin = value - std, ymax = value + std, color = `Temp(Â°)`))+
-  ggsci::scale_color_npg()+
-  theme_test()+
-  theme(strip.background = element_blank(), strip.text = element_text(size =  25), axis.title = element_text(size = 30), axis.text = element_text(size = 25), legend.title = element_text(size = 25), legend.text = element_text(size = 20))
-dev.off()
-
-
-
-
-
+summary(hu.an)
+boxplot(day~type,data=hu)
+                 
