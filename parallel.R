@@ -1,10 +1,9 @@
 # 并行计算----------------------------------------------------------------
-parallel <- function(func, ..., cores = NULL, MoreArgs = NULL, return = F, combine = "list", export = NULL, packages = NULL, errorhandling = c("stop", "remove", "pass"), verbose = F){
+parallel = function(func, ..., MoreArgs = NULL, cores = NULL, combine = "list", export = NULL, packages = NULL, errorhandling = c("stop", "remove", "pass"), verbose = F){
   #' @param func 被并行函数
   #' @param ... func的多个动态参数
   #' @param cores 要运行的线程数
   #' @param MoreArgs func的静态参数(list)
-  #' @param return 是否有返回值
   #' @param combine 线程间结果拼接模式(list, rbind, cbind, c等)
   #' @param export 要用到的环境变量及函数等
   #' @param packages 需要加载的包
@@ -17,41 +16,32 @@ parallel <- function(func, ..., cores = NULL, MoreArgs = NULL, return = F, combi
   
   # 内核数，不指定的话，为虚拟内核数-1
   if (is.null(cores)) {
-    cores <- detectCores(logical = T) - 2
+    cores = parallel::detectCores(logical = T) - 2
   }else{
-    cores <- cores
+    cores = cores
   }
   
   # 打开
-  cl <- makeCluster(cores) # type分系统类型
+  cl = parallel::makeCluster(cores)
   # 注册
-  registerDoParallel(cl)
+  doParallel::registerDoParallel(cl)
   # 并行计算
-  dots <- list(...)  # 动态参数list
-  if (return == F) {
-    foreach(i = seq(length(dots[[1]])), .combine = combine, .export = export, .packages = packages, .errorhandling = errorhandling, .verbose = verbose) %dopar% do.call(func,c(sapply(dots,`[`,i),MoreArgs))# 数据与参数组成list传入函数
-  }else{
-    result <- foreach(i = seq(length(dots[[1]])), .combine = combine, .export = export, .packages = packages, .errorhandling = errorhandling, .verbose = verbose) %dopar% do.call(func,c(lapply(dots,`[`,i),MoreArgs))
-  }
-  
+  dots = list(...)  # 动态参数list
+  result = foreach::foreach(i = seq(length(dots[[1]])), .combine = combine, .export = export, .packages = packages, .errorhandling = errorhandling, .verbose = verbose) %dopar% do.call(func, c(lapply(dots, `[`, i), MoreArgs))
+
   # 关闭
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   
   #返回结果
-  if (return == F) {
-    return()
-  }else{
-    return(result)
-  }
+  return(result)
 }
 
-
-# # # 测试代码
+# # 测试代码
 # parallel(func = paste,
-#          1:10, 1:10,
+#          1:10, 1:10, 1:10,
 #          MoreArgs = list(sep = "_"),
 #          combine = "rbind")
-# 
+
 
 # interpolation.colName_fara <- rep(interpolation.colName, length(idp))
 # idp_para <- rep(idp, length(interpolation.colName)) %>% sort()
