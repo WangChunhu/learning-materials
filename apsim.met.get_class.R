@@ -11,17 +11,17 @@ apsim.met_get <- R6Class(classname = "apsim.met_get",
                            year.end = NULL,
                            wrt.dir = NULL,
                            filenames = NULL,
-                           parallel.cores = 4,
+                           cores = NULL,
                            
                            # 属性初始化
-                           initialize = function(lons, lats, year.start, year.end, wrt.dir, filenames, parallel.cores){
+                           initialize = function(lons, lats, year.start, year.end, wrt.dir, filenames, cores){
                              lons <<- lons
                              lats <<- lats
                              year.start <<- year.start
                              year.end <<- year.end
                              wrt.dir <<- wrt.dir
                              filenames <<- filenames
-                             parallel.cores <<- parallel.cores
+                             cores <<- cores
                            },
                            # 公有方法
                            NASA.RTP_get_parallel = function(){
@@ -33,7 +33,7 @@ apsim.met_get <- R6Class(classname = "apsim.met_get",
                                         year.start = year.start,
                                         year.end = year.end
                                       ),
-                                      cores = parallel.cores,
+                                      cores = cores,
                                       export = c("NASA.RTP_get", "lons", "lats", "year.start", "year.end"),
                                       packages = c("nasapower", "data.table", "magrittr"),
                                       combine = "rbind",
@@ -52,7 +52,7 @@ apsim.met_get <- R6Class(classname = "apsim.met_get",
                                         year.start = year.start,
                                         year.end = year.end
                                       ),
-                                      cores = parallel.cores,
+                                      cores = cores,
                                       export = c("NASA.apsim.met_get", "lons", "lats", "filenames", "wrt.dir", "year.start", "year.end"),
                                       packages = c("apsimx", "data.table", "magrittr"),
                                       combine = "rbind",
@@ -71,12 +71,17 @@ apsim.met_get <- R6Class(classname = "apsim.met_get",
                                         year.start = year.start,
                                         year.end = year.end
                                       ),
-                                      cores = parallel.cores,
+                                      cores = cores,
                                       export = c("daymet.apsim.met_get", "lons", "lats", "filenames", "wrt.dir", "year.start", "year.end"),
                                       packages = c("apsimx", "daymetr", "data.table", "magrittr"),
                                       combine = "rbind",
                                       errorhandling = "pass",
                                       verbose = T)
+                           },
+                           
+                           ## 播放音乐
+                           music_play = function(path.music){
+                             tuneR::play(path.music)
                            }
                          ), 
                          # 私有成员
@@ -190,7 +195,7 @@ apsim.met_get <- R6Class(classname = "apsim.met_get",
                            },
                            
                            help = function(){
-                             cat("类名:apsim.met.get\n目的:根据给定的经纬度和开始结束日期从NASA数据库(https://power.larc.nasa.gov/api/temporal/)或daymet(https://daymet.ornl.gov/)下载农业气象数据，本函数只下载降雨，距离地面2M的最高温和最低温以及降雨数据\n包名:nasapower, apsimx, daymetr, data.table, magrittr, foreach和doParallel\n属性:lons: 经度向量(数值型)\n    lats: 纬度向量(数值型)\n    year.start: 开始日期(数值型) (如:2001: 实际为2001-1-1)\n    year.end: 结束日期(数值型) (如:2020: 实际为2020-12-31)\n    wrt.dir: 写出met文件的路径, 最后的\"/\"可有可无\n    filenames: 写出met文件的文件名, 命名为\"*.met\"\n    parallel.cores: 并行核数(数值型)(默认四线程) ")
+                             cat("类名:apsim.met.get\n目的:根据给定的经纬度和开始结束日期从NASA数据库(https://power.larc.nasa.gov/api/temporal/)或daymet(https://daymet.ornl.gov/)下载农业气象数据，本函数只下载降雨，距离地面2M的最高温和最低温以及降雨数据\n包名:nasapower, apsimx, daymetr, data.table, magrittr, foreach和doParallel\n属性:lons: 经度向量(数值型)\n    lats: 纬度向量(数值型)\n    year.start: 开始日期(数值型) (如:2001: 实际为2001-1-1)\n    year.end: 结束日期(数值型) (如:2020: 实际为2020-12-31)\n    wrt.dir: 写出met文件的路径, 最后的\"/\"可有可无\n    filenames: 写出met文件的文件名, 命名为\"*.met\"\n    cores: 并行核数(数值型)")
                            }
                          )
                          )
@@ -201,7 +206,7 @@ apsim.met_get <- R6Class(classname = "apsim.met_get",
 # apsim.met.get$public_fields # 公有属性
 # 
 # # 实例化
-# example <- apsim.met.get$new(lons = c(116, 108), lats = c(25, 26), year.start = 2000, year.end = 2002, wrt.dir = "D:/学习/杨蕊/apsim-湖北冬小麦/test", filename = c("test5.met", "test6.met"), parallel.cores = 2)
+# example <- apsim.met.get$new(lons = c(116, 108), lats = c(25, 26), year.start = 2000, year.end = 2002, wrt.dir = "D:/学习/杨蕊/apsim-湖北冬小麦/test", filename = c("test5.met", "test6.met"), cores = 2)
 # example$wrt.dir
 # 
 # # 检查是否需要下载包, 不需要则返回NULL
@@ -216,7 +221,7 @@ apsim.met_get <- R6Class(classname = "apsim.met_get",
 # example$NASA.apsim.met_get_parallel()
 # 
 # # 从daymetr数据库下载apsim.met文件并存放到本地, 空间范围未知
-# example <- apsim.met.get$new(lons = c(-93, -94), lats = c(42, 43), year.start = 2000, year.end = 2002, wrt.dir = "D:/学习/杨蕊/apsim-湖北冬小麦/test", filename = c("test7.met", "test8.met"), parallel.cores = 2)
+# example <- apsim.met.get$new(lons = c(-93, -94), lats = c(42, 43), year.start = 2000, year.end = 2002, wrt.dir = "D:/学习/杨蕊/apsim-湖北冬小麦/test", filename = c("test7.met", "test8.met"), cores = 2)
 # example$daymet.apsim.met_get_parallel()
 # 
 # # 获取农业方面以日为尺度的可下载的所由参数信息
